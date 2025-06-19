@@ -6,6 +6,7 @@ import numpy as np
 import json
 from pathlib import Path
 from tqdm import tqdm
+import ast
 
 
 @logger.catch
@@ -81,7 +82,8 @@ def main(annotations_path: Path, save_path: Path, no_split: bool, reduce: float)
 
                 if (output_path / f'{ann_id}.png').exists():
                     continue
-                img_cropped = crop_minAreaRect(img, *info['bounding_box'])
+                bbox = ast.literal_eval(info['bounding_box'])
+                img_cropped = crop_minAreaRect(img, *bbox)
                 cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
         json.dump(words, (output_path / 'words.json').open('w'))
 

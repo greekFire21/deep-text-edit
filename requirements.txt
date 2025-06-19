@@ -1,5 +1,3 @@
---find-links https://download.pytorch.org/whl/cu113/torch_stable.html
-
 autopep8==1.6.0
 blis==0.7.7
 catalogue==2.0.7
@@ -25,7 +23,6 @@ langcodes==3.3.0
 loguru==0.6.0
 MarkupSafe==2.0.1
 matplotlib==3.2.2
-murmurhash==1.0.7
 numpy==1.21.6
 opencv-python==4.1.2.30
 packaging==21.3
@@ -67,8 +64,6 @@ termcolor==1.1.0
 thinc==8.0.17
 threadpoolctl==3.1.0
 tomli==2.0.1
-torch @ https://download.pytorch.org/whl/cu113/torch-1.11.0%2Bcu113-cp37-cp37m-linux_x86_64.whl
-torchvision @ https://download.pytorch.org/whl/cu113/torchvision-0.12.0%2Bcu113-cp37-cp37m-linux_x86_64.whl
 tqdm==4.64.0
 typer==0.4.1
 typing-extensions==4.1.1

@@ -5,7 +5,7 @@ from src.utils.draw import draw_word, img_to_tensor
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
-
+from tqdm import tqdm
 
 
 class StyleGanAdvTrainer:
@@ -98,7 +98,13 @@ class StyleGanAdvTrainer:
         # desired_labels - text labels of content batch
         # style_content - rendered images containing the words from the style images
         # style_labels - text labels of the style_imgs batch
-        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.train_dataloader:
+        for batch in tqdm(self.train_dataloader):
+            style_imgs = batch["img_style"]
+            desired_content = batch["img_content"]
+            desired_labels = batch["content"]
+            style_content = batch["img_content_style"]
+            style_labels = batch["content_style"]
+
             if max(len(label) for label in desired_labels) > 25:
                 continue
             if max(len(label) for label in style_labels) > 25:
@@ -185,7 +191,13 @@ class StyleGanAdvTrainer:
         self.content_embedder.eval()
         self.style_embedder.eval()
 
-        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.val_dataloader:
+        for batch in tqdm(self.val_dataloader):
+            style_imgs = batch["img_style"]
+            desired_content = batch["img_content"]
+            desired_labels = batch["content"]
+            style_content = batch["img_content_style"]
+            style_labels = batch["content_style"]
+
             if max(len(label) for label in desired_labels) > 25:
                 continue
             if max(len(label) for label in style_labels) > 25:
@@ -257,6 +269,7 @@ class StyleGanAdvTrainer:
 
     def run(self):
         for epoch in range(self.total_epochs):
+            logger.info(f'epoch {epoch}')
             self.train()
             with torch.no_grad():
                 self.validate(epoch)

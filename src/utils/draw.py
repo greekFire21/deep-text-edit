@@ -20,7 +20,11 @@ def draw_word(word: str) -> Image:
     img = Image.new('RGB', (w, h), color=(255, 255, 255))
     fnt = ImageFont.truetype('./data/VerilySerifMono.otf', font_size)
     d = ImageDraw.Draw(img)
-    text_width, text_height = d.textsize(word, fnt)
+    
+    bbox = d.textbbox((0, 0), word, font=fnt)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    # text_width, text_height = d.textsize(word, fnt)
     position = ((w - text_width) / 2, (h - text_height) / 2)
 
     d.text(position, word, font=fnt, fill=0)

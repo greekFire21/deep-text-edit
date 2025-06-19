@@ -16,6 +16,9 @@ from src.losses.STRFL import OCRLoss
 from src.losses.typeface_perceptual import TypefacePerceptualLoss
 from torch.utils.data import DataLoader
 
+from datasets import load_dataset
+from src.data.dataloader import HFDataLoader
+
 
 class Config:
     def __init__(self):
@@ -32,9 +35,11 @@ class Config:
                 logger.error('You should download IMGUR5K dataset first.')
                 exit(1)
         
-        batch_size = 16
-        train_dataloader = DataLoader(BaselineDataset(style_dir / 'train', return_style_labels=True), shuffle=True, batch_size=batch_size)
-        val_dataloader = DataLoader(BaselineDataset(style_dir / 'val', return_style_labels=True), batch_size=batch_size)
+        batch_size = 64
+        dataset = load_dataset("jhc90/IMGUR5K_handwriting_cropped_data", cache_dir="/content/drive/MyDrive/textStyleBrush/IMGUR5K_handwriting_cropped_data")
+
+        train_dataloader = HFDataLoader(dataset['train'], return_style_labels=True, shuffle=True, batch_size=batch_size, num_workers=8).make_dataloader()
+        val_dataloader = HFDataLoader(dataset['val'], return_style_labels=True, shuffle=False, batch_size=batch_size, num_workers=8).make_dataloader()
 
         total_epochs = 500
 
@@ -93,7 +98,8 @@ class Config:
 
         logger = Logger(
             image_freq=100,
-            project_name='TDF-GAN',
+            project_name='deep-text-edit',
+            entity='greekfire21',
             config={
                 'ocr_coef': ocr_coef,
                 'cycle_coef': cycle_coef,
