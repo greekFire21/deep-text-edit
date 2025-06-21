@@ -142,5 +142,3 @@ class StyleGanMaskTrainer:
                 self.validate(epoch)
             if self.scheduler_G is not None:
                 self.scheduler_G.step()
-            if self.scheduler_D is not None:
-                self.scheduler_D.step()

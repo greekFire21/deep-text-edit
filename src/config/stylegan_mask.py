@@ -26,19 +26,12 @@ class Config:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
         style_dir = Path('data/IMGUR5K')
-
-        if not disk.get_disabled():
-            download_dataset('IMGUR5K')
-        else:
-            if not Path(style_dir).exists():
-                logger.error('You should download IMGUR5K dataset first.')
-                exit(1)
         
-        batch_size = 64
-        dataset = load_dataset("jhc90/webtoon_text_conversion_data", cache_dir="/content/drive/MyDrive/textStyleBrush/webtoon_text_conversion_data")
+        batch_size = 16
+        dataset = load_dataset("jhc90/webtoon_text_conversion_data_v2", cache_dir="/content/drive/MyDrive/textStyleBrush/webtoon_text_conversion_data_v2")
 
         train_dataloader = HFDataLoaderForStyleGANMask(dataset['train'], shuffle=True, batch_size=batch_size, num_workers=8).make_dataloader()
-        val_dataloader = HFDataLoaderForStyleGANMask(dataset['val'], shuffle=False, batch_size=batch_size, num_workers=8).make_dataloader()
+        val_dataloader = HFDataLoaderForStyleGANMask(dataset['valid'], shuffle=False, batch_size=batch_size, num_workers=8).make_dataloader()
 
         total_epochs = 500
 
