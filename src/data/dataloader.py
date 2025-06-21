@@ -58,3 +58,30 @@ class HFDataLoader():
     
     def make_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers)
+    
+
+class HFDataLoaderForStyleGANMask():
+    def __init__(self, dataset, shuffle, batch_size, num_workers):
+        self.dataset = dataset
+        self.shuffle = shuffle
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((128, 128)),
+        ])
+
+        self.dataset.set_transform(self.transform_batch)
+
+    def transform_batch(self, batch):
+        batch["style_img"] = [self.transform(style_img) for style_img in batch["style_img"]]
+        batch["content_img"] = [self.transform(draw_word(content)) for content in batch["content"]]
+
+        batch["mask_img"] = [self.transform(mask_img) for mask_img in batch["mask_img"]]
+        batch["desired_img"] = [self.transform(desired_img) for desired_img in batch["desired_img"]]
+
+        return batch
+    
+    def make_dataloader(self):
+        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers)
