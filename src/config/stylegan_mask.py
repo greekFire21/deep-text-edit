@@ -27,7 +27,7 @@ class Config:
         info_logger.info(f'Using device: {device}')
         style_dir = Path('data/IMGUR5K')
         
-        batch_size = 16
+        batch_size = 64
         dataset = load_dataset("jhc90/webtoon_text_conversion_data_v2", cache_dir="/content/drive/MyDrive/textStyleBrush/webtoon_text_conversion_data_v2")
 
         train_dataloader = HFDataLoaderForStyleGANMask(dataset['train'], shuffle=True, batch_size=batch_size, num_workers=8).make_dataloader()
@@ -47,6 +47,9 @@ class Config:
         content_embedder = ContentResnet().to(device)
         content_embedder.load_state_dict(torch.load(f'{weights_folder}/content_embedder'))
 
+        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : torch.nn.Identity()))
+        model_D.to(device)
+
         optimizer_G = torch.optim.AdamW(
             list(model_G.parameters()) +
             list(style_embedder.parameters()) +
@@ -58,6 +61,17 @@ class Config:
             optimizer_G,
             gamma=0.9
         )
+
+        optimizer_D = torch.optim.AdamW(model_D.parameters(), lr=1e-4)
+        scheduler_D = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer_D,
+            gamma=0.9
+        )
+
+        dir_coef = 1.0
+        perc_coef = 25.0
+        tex_coef = 7.0
+        adv_coef = 0.06
 
         checkpoint_folder = 'stylegan(pretrained_on_content)_mse_128x128'
         storage = Storage(f'checkpoints/{checkpoint_folder}')
@@ -73,16 +87,24 @@ class Config:
 
         self.trainer = StyleGanMaskTrainer(
             model_G,
+            model_D,
             style_embedder,
             content_embedder,
             optimizer_G,
+            optimizer_D,
             scheduler_G,
+            scheduler_D,
             train_dataloader,
             val_dataloader,
             storage,
             logger,
             total_epochs,
             device,
+            dir_coef,
+            perc_coef,
+            tex_coef,
+            adv_coef,
+            VGGLoss(),
             torch.nn.MSELoss()
         )
 
