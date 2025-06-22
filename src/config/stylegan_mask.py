@@ -71,7 +71,8 @@ class Config:
         dir_coef = 1.0
         perc_coef = 25.0
         tex_coef = 7.0
-        adv_coef = 0.06
+        adv_coef = 0.1
+        ocr_coef = 0.11
 
         checkpoint_folder = 'stylegan(pretrained_on_content)_mse_128x128'
         storage = Storage(f'checkpoints/{checkpoint_folder}')
@@ -104,8 +105,10 @@ class Config:
             perc_coef,
             tex_coef,
             adv_coef,
+            ocr_coef,
             VGGLoss(),
-            torch.nn.MSELoss()
+            torch.nn.MSELoss(),
+            OCRLoss(),
         )
 
     def run(self):

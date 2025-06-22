@@ -28,8 +28,10 @@ class StyleGanMaskTrainer:
                  perc_coef: float,
                  tex_coef: float,
                  adv_coef: float,
+                 ocr_coef: float,
                  perc_loss: nn.Module,
                  dir_loss: nn.Module,
+                 ocr_loss: nn.Module,
                  ):
 
         self.device = device
@@ -48,8 +50,10 @@ class StyleGanMaskTrainer:
         self.perc_coef = perc_coef
         self.tex_coef = tex_coef
         self.adv_coef = adv_coef
+        self.ocr_coef = ocr_coef
         self.dir_loss = dir_loss.to(device)
         self.perc_loss = perc_loss.to(device)
+        self.ocr_loss = ocr_loss.to(device)
         self.style_embedder = style_embedder
         self.content_embedder = content_embedder
     
@@ -115,12 +119,16 @@ class StyleGanMaskTrainer:
 
             adv_loss = self.model_G_adv_loss(preds_rgb)
 
+            ocr_loss, recognized = self.ocr_loss(preds_rgb, batch["content"], return_recognized=True)
+            word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
+
             loss_G = \
                 self.dir_coef * desired_imgs_dir_loss + \
                 self.dir_coef * mask_imgs_dir_loss + \
                 self.perc_coef * perc_loss + \
                 self.tex_coef * tex_loss + \
-                self.adv_coef * adv_loss
+                self.adv_coef * adv_loss + \
+                self.ocr_coef * ocr_loss
 
             # update models
             self.set_requires_grad(self.model_D, True)
@@ -139,12 +147,14 @@ class StyleGanMaskTrainer:
                     'tex_loss': tex_loss.item(),
                     'adv_loss': adv_loss.item(),
                     'disc_loss': loss_D.item(),
+                    'ocr_loss': ocr_loss.item(),
                     'full_loss': loss_G.item()},
                 images={
                     'style': style_imgs,
                     'content': content_imgs,
                     'result': preds_rgb,
-                    'mask_result': preds_mask})
+                    'mask_result': preds_mask,
+                    'recognized': word_images})
 
     def validate(self, epoch: int):
         self.model_G.eval()
@@ -175,12 +185,16 @@ class StyleGanMaskTrainer:
 
             adv_loss = self.model_G_adv_loss(preds_rgb)
 
+            ocr_loss, recognized = self.ocr_loss(preds_rgb, batch["content"], return_recognized=True)
+            word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
+
             loss_G = \
                 self.dir_coef * desired_imgs_dir_loss + \
                 self.dir_coef * mask_imgs_dir_loss + \
                 self.perc_coef * perc_loss + \
                 self.tex_coef * tex_loss + \
-                self.adv_coef * adv_loss
+                self.adv_coef * adv_loss + \
+                self.ocr_coef * ocr_loss
 
             self.logger.log_val(
                 losses={
@@ -189,12 +203,14 @@ class StyleGanMaskTrainer:
                     'perc_loss': perc_loss.item(),
                     'tex_loss': tex_loss.item(),
                     'adv_loss': adv_loss.item(),
+                    'ocr_loss': ocr_loss.item(),
                     'full_loss': loss_G.item()},
                 images={
                     'style': style_imgs,
                     'content': content_imgs,
                     'result': preds_rgb,
-                    'mask_result': preds_mask})
+                    'mask_result': preds_mask,
+                    'recognized': word_images})
 
         avg_losses, _ = self.logger.end_val()
         self.storage.save(epoch,
